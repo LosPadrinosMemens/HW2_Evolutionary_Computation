@@ -126,3 +126,24 @@ def binary_search(arr, target, low=0, high=None):
         return binary_search(arr, target, mid + 1, high)  # Search in the right half
     else:
         return binary_search(arr, target, low, mid - 1)  # Search in the left half
+
+def spread_factor(u=None, nc=2):
+    """
+    Computes the spread factor for Simulated Binary Crossover (SBX) given the u value
+
+    Parameters:
+    - u (float): u value from 0 to 1 to compute the spread factor
+    - nc (int): n_c value, n=0 uniform distribution, 2<n<5 matches closely the simulation for single-point crossover
+
+    Returns:
+    - beta (float)
+    """
+    if u is None:
+        u = random.random()
+
+    if u <= 0.5:
+        beta = (2 * u) ** (1/(nc + 1))
+    else:
+        beta = (1/(2 * (1 - u))) ** (1/(nc + 1))
+    return beta
+

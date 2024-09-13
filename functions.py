@@ -75,9 +75,90 @@ def initialize(n, binary, precision_digits = 4, constraints = None):
         return x_init
 
 #######################
-##     Selection     ##     
+##     Crossover     ##
 #######################
-def roulete_wheel(population, f_x, binary, constraints = None, precision_digits = 4, minimization = True):
+def point_crossover(parent1, parent2, n=1):
+    """
+    Given two parents strings, it returns the resulting child after n-point crossover for binary encoding.
+
+    Parameters:
+    - n (int): number of crossover points. Default is single point crossover
+    - parent1 & parent2 (str): string of binary encoded value
+
+    Returns:
+    - child1 & child2 (str): resulting string of binary encoded values
+    """
+    N = min(len(parent1), len(parent2))
+    if n > N:
+        raise ValueError("Number of crossover points cannot be greater than length of parents")
+    
+    crossover_points = random.sample(range(1, N+1), n)
+    print(crossover_points)
+    child1, child2 = "", ""
+    prev_point = 0
+    
+    for i, point in enumerate(crossover_points + [N]):
+        if i % 2 == 0:
+            child1 += parent1[prev_point:point]
+            child2 += parent2[prev_point:point]
+        else:
+            child1 += parent2[prev_point:point]
+            child2 += parent1[prev_point:point]
+        
+        prev_point = point
+    
+    return child1, child2
+
+def sbx(parent1, parent2, u=None, nc=2):
+    """
+    Given two parents arrays of real values, it performs simulated binary crossover returning the two children
+
+    Parameters:
+    - parent1 & parent2 (np.ndarray): arrays of real values
+    - nc (int): n_c value, n=0 uniform distribution, 2<n<5 matches closely the simulation for single-point crossover
+
+    Returns:
+    - child1 & child2 (np.ndarray): resulting arrays of real values
+    """
+    b = spread_factor(u, nc)
+    child1 = 0.5 * ((parent1 + parent2) - b * (parent2 - parent1)) 
+    child2 = 0.5 * ((parent1 + parent2) + b * (parent2 - parent1))
+
+    return child1, child2
+
+########################
+##      Mutation      ##
+########################
+def binary_mutation(parent, n = 1, p = 1.0):
+    """
+    Given a parent string, returns the mutated child (bit flip mutation). Only works for binary encoded values
+
+    Parameters:
+    - parent (str): string of binary encoded value
+    - n (int): number of mutations
+    - p (float): probability of mutation. Default always mutate.
+
+    Returns:
+    - child (str): resulting mutated child.
+    """
+    N = len(parent) # Amount of bits
+    if n > N:
+        raise ValueError("Number of mutation points cannot be greater than length of parent")
+    
+    mutation_points = random.sample(range(0, N), n)
+    mutation_mask = [random.random() <= p for _ in range(n)]
+    child = list(parent)
+    
+    for i, point in enumerate(mutation_points):
+        if mutation_mask[i]:
+            child[point] = '1' if parent[point] == '0' else '0'
+    
+    return ''.join(child)
+
+#######################
+##     Selection     ##
+#######################
+def roulete_wheel(population, f_x, binary=True, constraints = None, precision_digits = 4, minimization = True):
     """
     Implementation of the Roulette wheel selection
 
@@ -117,7 +198,7 @@ def roulete_wheel(population, f_x, binary, constraints = None, precision_digits 
 
     return population[sel_index]
 
-def tournament_selection(population, f_x, binary, constraints = None, precision_digits = 4, minimization = True, q = 2, p = 0):
+def tournament_selection(population, f_x, binary=False, constraints = None, precision_digits = 4, minimization = True, q = 2, p = 0):
     """
     Implementation of the Roulette wheel selection
 
