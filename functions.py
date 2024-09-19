@@ -155,6 +155,36 @@ def binary_mutation(parent, n = 1, p = 1.0):
     
     return ''.join(child)
 
+def parameter_based_mutation(y, constraints, t):
+    """
+    Given a real encoded parent, it returns a child that resulted from mutating the parent
+
+    Parameters:
+    - y (np.array): Real encoded values of parent (single parent)
+    - constraints (list of tuples): Defining lower and upper limits for the real variable.
+    - t (int): generation number
+
+    Returns:
+    - y_mut (np.array): Real encoded values of child (mutated)
+    """
+    if y.ndim != 1:
+        raise ValueError("y should be a one dimension np.array")
+    
+    y_mut = np.empty_like(y)
+
+    eta_m = 100 + t 
+    for i, y_i in enumerate(y): # Independently mutate every value from y
+        y_l, y_u = constraints[i]
+        
+        delta_max = y_u - y_l
+        delta = min(y_i-y_l,(y_u-y_i))/(delta_max)
+
+        beta_q = beta_q_factor(delta=delta, eta_m=eta_m)
+
+        y_mut[i] = y_i + beta_q * delta_max
+
+    return y_mut
+
 #######################
 ##     Selection     ##
 #######################

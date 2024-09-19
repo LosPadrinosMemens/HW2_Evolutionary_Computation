@@ -132,7 +132,7 @@ def spread_factor(u=None, nc=2):
     Computes the spread factor for Simulated Binary Crossover (SBX) given the u value
 
     Parameters:
-    - u (float): u value from 0 to 1 to compute the spread factor
+    - u (float): random u value from 0 to 1
     - nc (int): n_c value, n=0 uniform distribution, 2<n<5 matches closely the simulation for single-point crossover
 
     Returns:
@@ -147,3 +147,24 @@ def spread_factor(u=None, nc=2):
         beta = (1/(2 * (1 - u))) ** (1/(nc + 1))
     return beta
 
+def beta_q_factor(delta, eta_m, u=None):
+    """
+    Computes the beta_q factor for parameter based mutation (PM)
+
+    Parameters:
+    - delta (float): value calculated with y parent solution, y upper and lower limits.
+    - eta_m (float): 100 + generation number aka η_m
+    
+    Returns:
+    - Returns:
+    - beta_q (float)
+    """    
+    if u is None:
+        u = random.random()
+    
+    if u <= 0.5:
+        delta_q = (2 * u + (1 - 2 * u) * (1 - delta) ** (eta_m + 1)) ** (1 / (eta_m + 1)) - 1
+    else:
+        delta_q = 1 - (2 * (1 - u) + 2 * (u - 0.5) * (1 - delta) ** (eta_m + 1)) ** (1/(eta_m + 1))
+
+    return delta_q
