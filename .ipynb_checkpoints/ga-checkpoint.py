@@ -4,7 +4,7 @@ from functions import *
 ## Genetic Algorithms ##
 ########################
 
-def ga_solve(mu, f_x, constraints, n =2, binary = True, minimization = True, n_generations = 100, pc=0.9, precision_digits=4):
+def ga_solve(mu,n,binary,f_x, constraints, minimization, n_generations = 100, pc=0.9, precision_digits=4):
     """
 
     Parameters:
