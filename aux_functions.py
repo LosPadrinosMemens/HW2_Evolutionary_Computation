@@ -131,28 +131,29 @@ def encode_binary(real_value, constraint, precision_digits=4):
     binary_str = format(normalized_value, f'0{precision_digits}b')  # Format as a binary string
     return binary_str
 
-def decode_binary(binary_str, constraint, precision_digits = 4):
+def decode_binary(binary_str, constraint, precision_digits=4):
     """
-    Takes back one of the binary strings and the constraint to get the real value
-    
+    Decodes a single binary string to its corresponding real value based on constraints.
+
     Parameters:
-    - binary_str (str): encoded variable
-    - precision_digits (int): number of digits of precision if the representation is binary.
-    - constraint (tuple): Defining lower and upper limits for the real variable.
     
+    - binary_str (str): Encoded binary string for a single variable.
+    - constraint (tuple): (low, high) limits for the real variable.
+    - precision_digits (int): Number of decimal places of precision.
+
     Returns:
-    decoded (float): decoded variable in real 
-    """
+    - float: Decoded real value."""
     low, high = constraint  # Unpack the constraint tuple
-    
     # Step 1: Convert the binary string back to an integer
-    
-    int_value = int(binary_str, 2)
-    
-    # Step 2: Reverse the scaling (convert back to real value)
-    real_value = low + (int_value / (10**precision_digits))
-    
-    return truncate_float(real_value, precision_digits)
+    integer_value = int(binary_str, 2)
+    # Step 2: Calculate the maximum integer value possible
+    max_integer_value = (2 ** len(binary_str)) - 1
+    # Step 3: Normalize the integer value to the [0, 1] range
+    normalized_value = integer_value / max_integer_value
+    # Step 4: Scale the normalized value to the real constraint range
+    decoded = low + (high - low) * normalized_value
+    # Step 5: Round the decoded value to the specified precision digits
+    return round(decoded, precision_digits)
 
 def decode_population(binary_array, constraints, precision_digits=4):
     """

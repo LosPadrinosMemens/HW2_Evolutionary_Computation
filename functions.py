@@ -44,6 +44,7 @@ def initialize(n, binary, precision_digits = 4, constraints = None):
     Returns:
     x_init (np.ndarray): values for initialization of the problem.
     """
+    prueba = []
     if constraints is None: # Creating generic constraints
         constraints = [(-10, 10)] * n 
     else:
@@ -57,12 +58,13 @@ def initialize(n, binary, precision_digits = 4, constraints = None):
 
             # Step 2: Generate a random value within the range (low, high)
             real_value = np.random.uniform(low, high)
-            
+            prueba.append(real_value)
+
             binary_rep = encode_binary(real_value,(low,high))
 
             x_init.append(binary_rep)
 
-        return np.array(x_init)
+        return np.array(x_init),np.array(prueba) 
 
     else:
         x_init = np.array([np.random.uniform(low, high) for low, high in constraints])

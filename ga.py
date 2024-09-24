@@ -31,6 +31,10 @@ def ga_solve(mu,binary,f_x, constraints, minimization, n_generations = 100, pc=0
     max_fitness_list = []
     
     while t < n_generations:
+        population_fitness = eval_population(population, f_x, binary, constraints, precision_digits)
+        avg_fitness_list.append(np.mean(population_fitness))
+        std_fitness_list.append(np.std(population_fitness))
+        max_fitness_list.append(np.min(population_fitness))
         selected_population = list()
         if binary: # Wheel selection
             for i in range(mu):
@@ -91,10 +95,7 @@ def ga_solve(mu,binary,f_x, constraints, minimization, n_generations = 100, pc=0
                 list_children.append(child1)
                 list_children.append(child2)
         
-        population_fitness = eval_population(population, f_x, binary, constraints, precision_digits)
-        avg_fitness_list.append(np.mean(population_fitness))
-        std_fitness_list.append(np.std(population_fitness))
-        max_fitness_list.append(np.min(population_fitness))
+        
 
         population = list_children
         t += 1
