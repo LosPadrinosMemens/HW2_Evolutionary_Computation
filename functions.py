@@ -36,7 +36,7 @@ def initialize(n, binary, precision_digits = 4, constraints = None):
     constraints of the problem.
 
     Parameters:
-    - n (int): number of variables in the rastrigin function.
+    - n (int): number of genes in the individuals.
     - binary (Boolean): True if binary encoding, False if real encoding.
     - precision_digits (int): number or digits of precision if the representation is binary.
     - constraints (list of tuples): Defining lower and upper limits for each variable.
@@ -57,11 +57,11 @@ def initialize(n, binary, precision_digits = 4, constraints = None):
 
             # Step 2: Generate a random value within the range (low, high)
             real_value = np.random.uniform(low, high)
-            print(real_value)
+            #print(real_value)
 
             # Step 3: Discretize the real value (shifted and scaled)
             scaled_value = int((real_value - low) * 10**precision_digits)
-            print(scaled_value)
+            #print(scaled_value)
 
             # Step 4: Convert the scaled value to binary string of required length
             binary_rep = format(scaled_value, f'0{size}b')
@@ -79,15 +79,19 @@ def initialize(n, binary, precision_digits = 4, constraints = None):
 #######################
 def point_crossover(parent1, parent2, n=1):
     """
-    Given two parents strings, it returns the resulting child after n-point crossover for binary encoding.
+    Given two parents np.arrays of strings, it returns the resulting child after n-point crossover for binary encoding.
 
     Parameters:
     - n (int): number of crossover points. Default is single point crossover
-    - parent1 & parent2 (str): string of binary encoded value
+    - parent1 & parent2 (np.array): string of binary encoded value
 
     Returns:
-    - child1 & child2 (str): resulting string of binary encoded values
+    - child1 & child2 (np.array): resulting string of binary encoded values
     """
+    parent1_length, parent2_length = np.vectorize(len)(parent1), np.vectorize(len)(parent2) 
+    parent1_indices, parent2_indices = np.cumsum([0] + parent1_length), np.cumsum([0] + parent2_length)
+    parent1, parent2 = ''.join(parent1), ''.join(parent2)
+
     N = min(len(parent1), len(parent2))
     if n > N:
         raise ValueError("Number of crossover points cannot be greater than length of parents")
@@ -97,7 +101,7 @@ def point_crossover(parent1, parent2, n=1):
     child1, child2 = "", ""
     prev_point = 0
     
-    for i, point in enumerate(crossover_points + [N]):
+    for i, point in enumerate(crossover_points + [N]): # <100101, 1010, 101>
         if i % 2 == 0:
             child1 += parent1[prev_point:point]
             child2 += parent2[prev_point:point]
@@ -107,6 +111,8 @@ def point_crossover(parent1, parent2, n=1):
         
         prev_point = point
     
+    child1 = np.array([child1[parent1_indices[i]:parent1_indices[i+1]] for i in range(len(parent1_length))])
+    child2 = np.array([child2[parent2_indices[i]:parent2_indices[i+1]] for i in range(len(parent2_length))])
     return child1, child2
 
 def sbx(parent1, parent2, u=None, nc=2):
@@ -203,13 +209,7 @@ def roulete_wheel(population, f_x, binary=True, constraints = None, precision_di
     Returns:
     - x_sel (np.ndarray): Selected individual
     """
-    population_fitness = np.zeros(len(population))
-
-    if binary:
-        population = decode_population(population, constraints, precision_digits)
-
-    for i, ind in enumerate(population):
-        population_fitness[i] = eval_sympy(f_x, ind)
+    population_fitness = eval_population(population, f_x, binary, constraints, precision_digits)
 
     # Correcting for negative values
     if np.min(population_fitness) < 0:
