@@ -27,6 +27,8 @@ def ga_solve(mu,binary,f_x, constraints, minimization, n_generations = 100, pc=0
         population.append(individual)
     
     avg_fitness_list = []
+    std_fitness_list = []
+    max_fitness_list = []
     
     while t < n_generations:
         selected_population = list()
@@ -35,19 +37,23 @@ def ga_solve(mu,binary,f_x, constraints, minimization, n_generations = 100, pc=0
                 individual = roulete_wheel(population,f_x,constraints=constraints,minimization=minimization)
                 selected_population.append(individual)
 
-            shuffled_indices = np.random.permutation(len(mu)) # 1, 2, 3, 4 --> 2, 4, 1, 3
+            shuffled_indices = np.random.permutation(mu) # 1, 2, 3, 4 --> 2, 4, 1, 3
             selected_population = [selected_population[i] for i in shuffled_indices]
 
             list_children = []
 
-            for i in range(0, len(mu), 2): # 1, 3
+            for i in range(0, mu, 2): # 1, 3
                 parent1, parent2 = selected_population[i], selected_population[i+1]
 
-                filter_crossover = random.random()
-                if filter_crossover < pc:
-                    child1, child2 = point_crossover(parent1, parent2)
-                else:
-                    child1, child2 = parent1, parent2
+                QC = False
+                while QC != True:
+                    filter_crossover = random.random()
+                    if filter_crossover < pc:
+                        child1, child2 = point_crossover(parent1, parent2)
+                    else:
+                        child1, child2 = parent1, parent2
+
+                    QC = constraint_checker(child1,constraints,binary, precision_digits) and constraint_checker(child2,constraints,binary, precision_digits)
 
                 child1_gene = np.random.randint(0, len(child1)) # To be mutated  
                 child1[child1_gene] = binary_mutation(child1[child1_gene], p = p_m)
@@ -55,7 +61,7 @@ def ga_solve(mu,binary,f_x, constraints, minimization, n_generations = 100, pc=0
                 child2_gene = np.random.randint(0, len(child2)) # To be mutated
                 child1[child2_gene] = binary_mutation(child2[child2_gene], p = p_m)
 
-                child1, child2 = constraint_checker(child1), constraint_checker(child2)
+                #child1, child2 = constraint_checker(child1, constraints, binary), constraint_checker(child2, constraints, binary)
 
                 list_children.append(child1)
                 list_children.append(child2)
@@ -67,7 +73,7 @@ def ga_solve(mu,binary,f_x, constraints, minimization, n_generations = 100, pc=0
 
             list_children = []
 
-            for i in range(0, len(mu), 2): # 1, 3
+            for i in range(0, mu, 2): # 1, 3
                 parent1, parent2 = selected_population[i], selected_population[i+1]
                 child1, child2 = point_crossover(parent1, parent2)
 
@@ -80,15 +86,17 @@ def ga_solve(mu,binary,f_x, constraints, minimization, n_generations = 100, pc=0
                 child1 = parameter_based_mutation(child1,constraints=constraints,t=t)
                 child2 = parameter_based_mutation(child1,constraints=constraints,t=t)
 
-                child1, child2 = constraint_checker(child1), constraint_checker(child2)
+                child1, child2 = constraint_checker(child1, constraints), constraint_checker(child2, constraints)
 
                 list_children.append(child1)
                 list_children.append(child2)
         
         population_fitness = eval_population(population, f_x, binary, constraints, precision_digits)
         avg_fitness_list.append(np.mean(population_fitness))
+        std_fitness_list.append(np.std(population_fitness))
+        max_fitness_list.append(np.min(population_fitness))
 
         population = list_children
         t += 1
         print(f"{t}/{n_generations} done", end='\r')
-    return avg_fitness_list
+    return avg_fitness_list, std_fitness_list, max_fitness_list

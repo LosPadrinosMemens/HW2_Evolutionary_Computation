@@ -48,29 +48,55 @@ def eval_population(population, obj_func, binary, constraints, precision_digits=
     
 
 
-def constraint_checker(x, constraints):
+def constraint_checker(x, constraints, binary, precision_digits=4):
     """
-    Checks if the new solution of the problem is within the constraint of a problem
-    and modifies the solution to be within the closest limit if it goes out of bounds.
+    Checks if the new the solution of the problem is within the constraint of a problem
 
     Parameters:
     - x (np.ndarray): New solution to the problem
     - constraints (list of list): Defining lower and upper limits for each variable e.g. [[-3, 3], [-2, 2]]
 
     Returns:
-    - np.ndarray: Modified solution with out-of-bound values set to the closest limit
+    - Boolean: True if solution is within the constraints, False otherwise
     """
+    if binary:
+        x = np.array([decode_binary(str(x[i]), constraints[i], precision_digits) for i in range(len(x))])
     if len(constraints) == 0:
-        return x  # No constraints provided, return original x
+        return True  # No constraints provided, always return True
     
-    # Iterate over each element in the solution x
     for i in range(len(x)):
-        if x[i] < constraints[i][0]:  # If less than lower bound
-            x[i] = constraints[i][0]  # Set to lower bound
-        elif x[i] > constraints[i][1]:  # If greater than upper bound
-            x[i] = constraints[i][1]  # Set to upper bound
-    
-    return x
+        if not (constraints[i][0] <= x[i] <= constraints[i][1]):
+            return False
+    return True
+#def constraint_checker(x, constraints, binary, precision_digits=4):
+#    """
+#    Checks if the new solution of the problem is within the constraint of a problem
+#    and modifies the solution to be within the closest limit if it goes out of bounds.
+#
+#    Parameters:
+#    - x (np.ndarray): New solution to the problem
+#    - constraints (list of list): Defining lower and upper limits for each variable e.g. [[-3, 3], [-2, 2]]
+#
+#    Returns:
+#    - np.ndarray: Modified solution with out-of-bound values set to the closest limit
+#    """
+#    if len(constraints) == 0:
+#        return x  # No constraints provided, return original x
+#    
+#    if binary:
+#        x = np.array([decode_binary(str(x[i]), constraints[i], precision_digits) for i in range(len(x))])
+#    
+#    # Iterate over each element in the solution x
+#    for i in range(len(x)):
+#        if x[i] < constraints[i][0]:  # If less than lower bound
+#            x[i] = constraints[i][0]  # Set to lower bound
+#        elif x[i] > constraints[i][1]:  # If greater than upper bound
+#            x[i] = constraints[i][1]  # Set to upper bound
+#    
+#    if binary:
+#        x = np.array([encode_binary(x[i], constraints[i], precision_digits) for i in range(len(x))])
+#    
+#    return x
 
 def print_verbose(verbose_level, x_best, fx_best, i):
     """
@@ -84,6 +110,26 @@ def print_verbose(verbose_level, x_best, fx_best, i):
 def truncate_float(float_number, decimal_places):
     multiplier = 10 ** decimal_places
     return int(float_number * multiplier) / multiplier
+
+def encode_binary(real_value, constraint, precision_digits=4):
+    """
+    Encodes a real value back into binary format.
+    
+    Parameters:
+    - real_value (float): The real value to encode.
+    - constraint (tuple): Defining lower and upper limits for the real variable.
+    - precision_digits (int): Precision digits for encoding.
+    
+    Returns:
+    - binary_str (str): The encoded binary string.
+    """
+    low, high = constraint
+    # Normalize the real value back to [0, 1] range
+    max_value = 2**precision_digits - 1
+    normalized_value = int((real_value - low) / (high - low) * max_value)
+    # Convert normalized value to binary string
+    binary_str = format(normalized_value, f'0{precision_digits}b')  # Format as a binary string
+    return binary_str
 
 def decode_binary(binary_str, constraint, precision_digits = 4):
     """
@@ -130,7 +176,7 @@ def decode_population(binary_array, constraints, precision_digits=4):
         
         decoded_population[i, :] = decoded_array
     
-    return np.array([decoded_population])
+    return np.array(decoded_population)
 
 def binary_search(arr, target, low=0, high=None):
     """

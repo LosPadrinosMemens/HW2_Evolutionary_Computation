@@ -57,14 +57,8 @@ def initialize(n, binary, precision_digits = 4, constraints = None):
 
             # Step 2: Generate a random value within the range (low, high)
             real_value = np.random.uniform(low, high)
-            #print(real_value)
-
-            # Step 3: Discretize the real value (shifted and scaled)
-            scaled_value = int((real_value - low) * 10**precision_digits)
-            #print(scaled_value)
-
-            # Step 4: Convert the scaled value to binary string of required length
-            binary_rep = format(scaled_value, f'0{size}b')
+            
+            binary_rep = encode_binary(real_value,(low,high))
 
             x_init.append(binary_rep)
 
@@ -88,16 +82,21 @@ def point_crossover(parent1, parent2, n=1):
     Returns:
     - child1 & child2 (np.array): resulting string of binary encoded values
     """
-    parent1_length, parent2_length = np.vectorize(len)(parent1), np.vectorize(len)(parent2) 
-    parent1_indices, parent2_indices = np.cumsum([0] + parent1_length), np.cumsum([0] + parent2_length)
-    parent1, parent2 = ''.join(parent1), ''.join(parent2)
+    parent1_length = np.vectorize(len)(parent1)
+    parent2_length = np.vectorize(len)(parent2)
+
+    parent1_indices = np.cumsum([0] + list(parent1_length))
+    parent2_indices = np.cumsum([0] + list(parent2_length))
+
+    parent1 = ''.join(parent1)
+    parent2 = ''.join(parent2)
 
     N = min(len(parent1), len(parent2))
     if n > N:
         raise ValueError("Number of crossover points cannot be greater than length of parents")
     
     crossover_points = random.sample(range(1, N+1), n)
-    print(crossover_points)
+    #print(crossover_points)
     child1, child2 = "", ""
     prev_point = 0
     
@@ -113,6 +112,7 @@ def point_crossover(parent1, parent2, n=1):
     
     child1 = np.array([child1[parent1_indices[i]:parent1_indices[i+1]] for i in range(len(parent1_length))])
     child2 = np.array([child2[parent2_indices[i]:parent2_indices[i+1]] for i in range(len(parent2_length))])
+
     return child1, child2
 
 def sbx(parent1, parent2, u=None, nc=2):
@@ -219,11 +219,11 @@ def roulete_wheel(population, f_x, binary=True, constraints = None, precision_di
     if minimization:
         population_fitness = np.max(population_fitness) - population_fitness
     
-    print(population_fitness)
+    #print(population_fitness)
     pop_prob_cum = np.cumsum(population_fitness / np.sum(population_fitness))
-    print(pop_prob_cum)
+    #print(pop_prob_cum)
     target = np.random.uniform(0, 1)
-    print(target)
+    #print(target)
     sel_index = binary_search(pop_prob_cum, target)
 
     return population[sel_index]
@@ -257,9 +257,9 @@ def tournament_selection(population, f_x, binary=False, constraints = None, prec
     if minimization:
         population_fitness = np.max(population_fitness) - population_fitness
     
-    print(population_fitness)
+    #print(population_fitness)
     shuffled_indices = np.random.permutation(len(population))
-    print(shuffled_indices)
+    #print(shuffled_indices)
     winners = []
 
     for i in range(0, len(shuffled_indices), q):
