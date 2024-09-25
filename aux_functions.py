@@ -2,6 +2,7 @@ import random
 import numpy as np
 import sympy as sp
 import math
+import matplotlib.pyplot as plt
 
 def eval_sympy(obj_func, x):
     """
@@ -214,3 +215,27 @@ def beta_q_factor(delta, eta_m, u=None):
         delta_q = 1 - (2 * (1 - u) + 2 * (u - 0.5) * (1 - delta) ** (eta_m + 1)) ** (1/(eta_m + 1))
 
     return delta_q
+
+def plot_convergence(max_bin, max_real, avg_bin, avg_real):
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+    ax1.set_xlabel('Number of Generations')
+    ax1.set_ylabel('Maximum Fitness')
+    ax1.plot(max_bin, label='Binary Encoding (Max)', color='blue', linestyle='-')
+    ax1.plot(max_real, label='Real Encoding (Max)', color='green', linestyle='-')
+    ax1.legend(loc='upper left')
+    ax1.grid(True)
+    ax1.set_title('Maximum Fitness Over Generations')
+
+    # Second subplot for average fitness
+    ax2.set_xlabel('Number of Generations')
+    ax2.set_ylabel('Average Fitness')
+    ax2.plot(avg_bin, label='Binary Encoding (Avg)', color='blue', linestyle='--')
+    ax2.plot(avg_real, label='Real Encoding (Avg)', color='green', linestyle='--')
+    ax2.legend(loc='upper left')
+    ax2.grid(True)
+    ax2.set_title('Average Fitness Over Generations')
+
+    # Adjust layout and show the plot
+    plt.tight_layout()
+    plt.show()
