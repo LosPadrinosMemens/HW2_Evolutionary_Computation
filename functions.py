@@ -133,6 +133,24 @@ def sbx(parent1, parent2, u=None, nc=2):
 
     return child1, child2
 
+
+def binomial_crossover_and_selection(parent, trial, n_genes, obj_func, pc=0.8):
+    J = set_J(n_genes, pc)
+
+    offspring = np.copy(parent)
+
+    # Step 3: Perform the crossover
+    for j in J:
+        offspring[j] = trial[j]  # Replace with trial solution values at crossover points
+
+    offspring_fitness = eval_sympy(obj_func, offspring)
+    parent_fitness = eval_sympy(obj_func, parent)
+
+    if offspring_fitness < parent_fitness:
+        return offspring
+    else:
+        return parent
+
 ########################
 ##      Mutation      ##
 ########################
@@ -191,6 +209,30 @@ def parameter_based_mutation(y, constraints, t):
         y_mut[i] = y_i + beta_q * delta_max
 
     return y_mut
+
+def polynomial_mutation(X, F):
+    """
+    Perform polynomial mutation on a 2D point (x, y coordinates), using indices of X for lower and upper values.
+    
+    Args:
+    X: numpy array with two values representing x and y coordinates.
+    F: scaling factor for mutation (usually between 0.5 and 1).
+    
+    Returns:
+    Mutated point U (with mutated x and y coordinates).
+    """
+    # Randomly sample the indices for X_lower and X_upper
+    lower_index = np.random.randint(0, len(X))  # Random index for X_lower
+    upper_index = np.random.randint(0, len(X))  # Random index for X_upper
+    
+    # Extract the values of X_lower and X_upper based on the sampled indices
+    X_lower = X[lower_index]
+    X_upper = X[upper_index]
+    
+    # Apply mutation (operation for x = [y, z], i.e., both coordinates)
+    U = X + F * (X_upper - X_lower)
+    
+    return U
 
 #######################
 ##     Selection     ##
@@ -276,3 +318,4 @@ def tournament_selection(population, f_x, binary=False, constraints = None, prec
             winners.append(winner_index)
 
     return np.array(winners)
+

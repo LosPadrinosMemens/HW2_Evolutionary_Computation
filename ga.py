@@ -4,7 +4,7 @@ from functions import *
 ## Genetic Algorithms ##
 ########################
 
-def ga_solve(mu, f_x, constraints, n =2, binary = True, minimization = True, n_generations = 100, pc=0.9, precision_digits=4):
+def ga_solve(mu, f_x, constraints, n =2, binary = True, minimization = True, n_generations = 100, pc=0.9, dif=True, F=0.6, precision_digits=4):
     """
 
     Parameters:
@@ -23,12 +23,13 @@ def ga_solve(mu, f_x, constraints, n =2, binary = True, minimization = True, n_g
 
     population = list() # List of ind ividuals/chromosomes 
     for i in range(mu):
-        individual = initialize(n, binary, constraints = constraints) # np.arrays
+        individual = initialize(n_genes, binary, constraints = constraints) # np.arrays
         population.append(individual)
     
     avg_fitness_list = []
     std_fitness_list = []
     max_fitness_list = []
+    best_fitness_list = []
     population_fitness = eval_population(population, f_x, binary, constraints, precision_digits)
     avg_fitness_list.append(float(np.mean(population_fitness)))
     std_fitness_list.append(float(np.std(population_fitness)))
@@ -71,29 +72,39 @@ def ga_solve(mu, f_x, constraints, n =2, binary = True, minimization = True, n_g
                 list_children.append(child2)
 
         else: # Tournament selection (ran twice to keep the number of individuals the same)
-            winners_1 = tournament_selection(population, f_x, binary=binary, minimization=minimization) # Half of the individuals selected
-            winners_2 = tournament_selection(population, f_x, binary=binary, minimization=minimization) # Half of the individuals selected
-            selected_population = winners_1 + winners_2
-            selected_population = np.append(winners_1,winners_2)
-            selected_population = [population[i] for i in selected_population]
+            if dif: # Differential evolution
+                list_children = []
+                trial_population = polynomial_mutation(np.array(population), F)
+                
+                for i in range(0,mu):
+                    parent = population[i]
+                    trial = trial_population[i]
+                    list_children.append(binomial_crossover_and_selection(parent, trial, n_genes, f_x, pc=pc))
 
-            list_children = []
+            else: # not differential evolution
+                winners_1 = tournament_selection(population, f_x, binary=binary, minimization=minimization) # Half of the individuals selected
+                winners_2 = tournament_selection(population, f_x, binary=binary, minimization=minimization) # Half of the individuals selected
+                selected_population = winners_1 + winners_2
+                selected_population = np.append(winners_1,winners_2)
+                selected_population = [population[i] for i in selected_population]
 
-            for i in range(0, mu, 2): # 1, 3
-                parent1, parent2 = selected_population[i], selected_population[i+1]
+                list_children = []
 
-                filter_crossover = random.random()
-                if filter_crossover < pc:
-                    child1, child2 = sbx(parent1, parent2, nc=20)
-                else:
-                    child1, child2 = parent1, parent2
+                for i in range(0, mu, 2): # 1, 3
+                    parent1, parent2 = selected_population[i], selected_population[i+1]
 
-                child1 = parameter_based_mutation(child1,constraints=constraints,t=t)
-                child2 = parameter_based_mutation(child1,constraints=constraints,t=t)
+                    filter_crossover = random.random()
+                    if filter_crossover < pc:
+                        child1, child2 = sbx(parent1, parent2, nc=20)
+                    else:
+                        child1, child2 = parent1, parent2
 
-                #child1, child2 = constraint_checker(child1, constraints), constraint_checker(child2, constraints)
-                list_children.append(child1)
-                list_children.append(child2)
+                    child1 = parameter_based_mutation(child1,constraints=constraints,t=t)
+                    child2 = parameter_based_mutation(child1,constraints=constraints,t=t)
+
+                    #child1, child2 = constraint_checker(child1, constraints), constraint_checker(child2, constraints)
+                    list_children.append(child1)
+                    list_children.append(child2)
 
         population = list_children
         t += 1
@@ -102,5 +113,9 @@ def ga_solve(mu, f_x, constraints, n =2, binary = True, minimization = True, n_g
         avg_fitness_list.append(float(np.mean(population_fitness)))
         std_fitness_list.append(float(np.std(population_fitness)))
         max_fitness_list.append(float(np.min(population_fitness)))
+        best_fitness_idx = np.argmin(population_fitness)
+        best_fitness = population_fitness[best_fitness_idx]
+        best_fitness_list.append(population[best_fitness_idx])
+        max_fitness_list.append(float(best_fitness))
         print(f"{t}/{n_generations} done", end='\r')
-    return avg_fitness_list, std_fitness_list, max_fitness_list
+    return avg_fitness_list, std_fitness_list, max_fitness_list, best_fitness_list

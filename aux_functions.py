@@ -96,7 +96,9 @@ def encode_binary(real_value, constraint, precision_digits=4):
     low, high = constraint
     # Normalize the real value back to [0, 1] range
     max_value = 2**precision_digits - 1
+    #print(max_value)
     normalized_value = int((real_value - low) / (high - low) * max_value)
+    #print(normalized_value)
     # Convert normalized value to binary string
     binary_str = format(normalized_value, f'0{precision_digits}b')  # Format as a binary string
     return binary_str
@@ -239,3 +241,17 @@ def plot_convergence(max_bin, max_real, avg_bin, avg_real):
     # Adjust layout and show the plot
     plt.tight_layout()
     plt.show()
+
+
+def set_J(N, pc=0.8):
+    j_star = np.random.randint(0, N)  
+
+    J = {j_star}
+
+    for j in range(N):
+        if j != j_star:
+            u = np.random.random()  
+            if u < pc: 
+                J.add(j)
+
+    return list(J)
